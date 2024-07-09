@@ -13,3 +13,13 @@ export_presets.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# GDExtension
+.sconsign.dblite
+.vscode/
+src/*.obj
+build/
+
+# Imports
+opencv/build/
+opencv/sources/
