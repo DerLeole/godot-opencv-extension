@@ -23,3 +23,6 @@ build/
 # Imports
 opencv/build/
 opencv/sources/
+
+# Demo
+demo/bin/

@@ -15,14 +15,16 @@ env = SConscript("godot-cpp/SConstruct")
 
 # set this path to your library files. This is the location of dll, dylib and so files.
 opencv_library_path = [
-    'opencv/build/x64/vc16/lib'
+    'opencv/build/x64/vc16/lib',
+    #'YourCustomOpencvFolder/build/x64/vc16/lib'
 ]
 
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 
 opencv_header_files = [
     "src/",
-    "opencv/build/include"
+    "opencv/build/include",
+    #"YourCustomOpencvFolder/build/include"
 ]
 
 opencv_library_files = {
@@ -61,14 +63,14 @@ sources = Glob("src/*.cpp")
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(
-        "demo/bin/libgdopencv.{}.{}.framework/libgdopencv.{}.{}".format(
+        "demo/bin/godotopencvextension.{}.{}.framework/godotopencvextension.{}.{}".format(
             env["platform"], env["target"], env["platform"], env["target"]
         ),
         source=sources,
     )
 else:
     library = env.SharedLibrary(
-        "demo/bin/libgdopencv{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        "demo/bin/godotopencvextension{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,
     )
 
@@ -82,8 +84,8 @@ def copy_extension(target, source, env):
     shutil.copy(str(source[0]), str(target[0]))
 
 
-source_path = 'opencv.gdextension'
-target_path = 'demo/bin/opencv.gdextension'
+source_path = 'opencvextension.gdextension'
+target_path = 'demo/bin/opencvextension.gdextension'
 
 env.Command(target=target_path, source=source_path, action=copy_extension)
 
