@@ -10,3 +10,21 @@ Inspired by:
 - https://github.com/matt-s-clark/godot-gdextension-opencv
 
 # Building
++ Install Scons
++ Download opencv-4.9.0 for your OS and place the header and library files inside the opencv folder
+  - Make sure to change the paths in the SConstruct file to match your file paths
++ Initialize the `godot-cpp` submodule
+```
+git submodule update --init
+```
++ Build with Scons
+```
+scons platform=windows disable_exceptions=false
+```
+
+# Demo
+To use the demo you first have to build the library files. 
+
+- The building process will automatically copy the .gdextension file and any built libraries to the bin/ folder inside the demo project folder
+- You will still have to manually copy the required opencv library files into the demo/bin/ folder.
+  - The required library files for your system are noted in the SConstruct file, the path on where to find them depends on where you installed opencv
