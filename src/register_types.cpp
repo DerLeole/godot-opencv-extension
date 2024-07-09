@@ -4,12 +4,16 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "CVCamera.h"
+
 using namespace godot;
 
 void initialize_opencv_extension(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+
+	ClassDB::register_class<CVCamera>();
 }
 
 void uninitialize_opencv_extension(ModuleInitializationLevel p_level) {
