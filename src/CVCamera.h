@@ -46,6 +46,8 @@ public:
     void flip(bool flip_lr, bool flip_ud);
     void set_threshold(double threshold);
     Ref<Image> get_threshold_image();
+
+    int find_rectangles(bool draw_on_overlay);
 };
 
 } //namespace godot

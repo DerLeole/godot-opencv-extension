@@ -6,6 +6,8 @@
 
 using namespace godot;
 
+typedef cv::Vec<uint8_t, 4> Pixel;
+
 void CVCamera::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("_to_string"), &CVCamera::_to_string);
@@ -19,6 +21,8 @@ void CVCamera::_bind_methods()
     ClassDB::bind_method(D_METHOD("flip"), &CVCamera::flip);
     ClassDB::bind_method(D_METHOD("set_threshold"), &CVCamera::set_threshold);
     ClassDB::bind_method(D_METHOD("get_threshold_image"), &CVCamera::get_threshold_image);
+
+    ClassDB::bind_method(D_METHOD("find_rectangles"), &CVCamera::find_rectangles);
 }
 
 CVCamera::CVCamera()
@@ -83,6 +87,17 @@ Ref<Image> CVCamera::mat_to_image(cv::Mat mat)
     {
         cv::cvtColor(mat, image_mat, cv::COLOR_GRAY2RGB);
     }
+    else if (mat.channels() == 4)
+    {
+        // Turn Pixels alpha value opaque, where there is anything but black
+        image_mat = mat;
+        image_mat.forEach<Pixel>([](Pixel &p, const int *position) -> void
+                                 {
+            if (p[0] > 0 || p[1] > 0 || p[2] > 0)
+            {
+                p[3] = 255;
+            } });
+    }
     else
     {
         image_mat = mat;
@@ -99,7 +114,7 @@ Ref<Image> CVCamera::mat_to_image(cv::Mat mat)
     {
         image = Image::create_from_data(image_mat.cols, image_mat.rows, false, Image::Format::FORMAT_RGBA8, bytes);
     }
-    else 
+    else
     {
         image = Image::create_from_data(image_mat.cols, image_mat.rows, false, Image::Format::FORMAT_RGB8, bytes);
     }
@@ -167,4 +182,74 @@ Ref<Image> CVCamera::get_threshold_image()
     }
 
     return mat_to_image(frame_tresh);
+}
+
+int CVCamera::find_rectangles(bool draw_on_overlay = false)
+{
+    // Find contours
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(frame_tresh, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<std::vector<cv::Point>> rectangles;
+
+    for (int i = 0; i < contours.size(); i++)
+    {
+        std::vector<cv::Point> approximation;
+
+        // Approximate contour with lines
+        cv::approxPolyDP(contours[i], approximation, cv::arcLength(contours[i], true) * 0.02, true);
+
+        // Check for four corners
+        if (approximation.size() == 4)
+        {
+            // Check for size
+            cv::Rect bounding_box = cv::boundingRect(approximation);
+
+            if (bounding_box.height > 10 && bounding_box.width > 10)
+            {
+                // Check for convexn
+                if (cv::isContourConvex(approximation))
+                {
+                    rectangles.insert(rectangles.end(), approximation);
+
+                    if (draw_on_overlay)
+                    {
+                        cv::polylines(frame_overlay, approximation, true, cv::Scalar(255, 0, 0));
+                    }
+                }
+            }
+        }
+    }
+
+    // Subdivide each line into 7 parts
+    std::vector<std::vector<std::vector<cv::Point>>> subpoints(rectangles.size(), std::vector<std::vector<cv::Point>>(4, std::vector<cv::Point>(7, cv::Point2i(0, 0))));
+    for (int i = 0; i < rectangles.size(); i++)
+    {
+        for (int j = 0; j < rectangles[i].size(); j++)
+        {
+            cv::Point line = rectangles[i][(j + 1) % 4] - rectangles[i][j];
+
+            for (int k = 0; k < 7; k++)
+            {
+                subpoints[i][j][k] = rectangles[i][j] + (line * (k / 7.0));
+
+                if (draw_on_overlay)
+                {
+                    cv::circle(frame_overlay, subpoints[i][j][k], 3, cv::Scalar(0, 255, 0));
+
+                    // Draw Chess lines
+                    if (j >= 2 && k >= 1) // 2/4 sides of the rectangle done & dont do it for the 0th element
+                    {
+                        cv::line(frame_overlay, subpoints[i][j][k], subpoints[i][j - 2][7 - k], cv::Scalar(0, 0, 255));
+                    }
+                }
+
+            }
+        }
+
+
+    }
+
+    return rectangles.size();
 }
