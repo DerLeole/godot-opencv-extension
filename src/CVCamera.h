@@ -16,9 +16,16 @@ class CVCamera : public RefCounted {
 
 private:
 	cv::VideoCapture capture;
-    cv::Mat frame;
+    uint64_t last_update_frame;
+    cv::Mat frame_raw;
+    cv::Mat frame_rgb;
+    cv::Mat frame_gray;
     cv::Mat frame_tresh;
     bool flip_lr, flip_ud;
+    double threshold;
+
+    void update_frame();
+    Ref<Image> mat_to_image(cv::Mat mat);
 
 protected:
     static void _bind_methods();
@@ -34,6 +41,7 @@ public:
     int get_width();
     int get_height();
     void flip(bool flip_lr, bool flip_ud);
+    void set_threshold(double threshold);
 };
 
 } //namespace godot
