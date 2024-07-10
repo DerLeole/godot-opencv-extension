@@ -1,12 +1,13 @@
 extends Node
 
 var camera : CVCamera = CVCamera.new();
-@onready
-var camera_canvas : Sprite2D = $CameraCanvas;
+@export var camera_canvas : Sprite2D;
+@export var threshold_slider : Range;
 var texture : ImageTexture;
 
 func _init():
     camera.open(0);
+    camera.flip(false, false);
     texture = ImageTexture.new();
 
 func _process(delta):
