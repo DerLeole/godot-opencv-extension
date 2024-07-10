@@ -15,6 +15,11 @@ run/main_scene="res://demo.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
 
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=480
+
 [dotnet]
 
 project/assembly_name="Godot OpenCV Extension Demo"

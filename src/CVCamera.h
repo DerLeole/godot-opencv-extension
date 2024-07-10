@@ -21,6 +21,7 @@ private:
     cv::Mat frame_rgb;
     cv::Mat frame_gray;
     cv::Mat frame_tresh;
+    cv::Mat frame_overlay;
     bool flip_lr, flip_ud;
     double threshold;
 
@@ -38,10 +39,13 @@ public:
     void open(int device);
     void close();
     Ref<Image> get_image();
+    Ref<Image> get_gray_image();
+    Ref<Image> get_overlay_image();
     int get_width();
     int get_height();
     void flip(bool flip_lr, bool flip_ud);
     void set_threshold(double threshold);
+    Ref<Image> get_threshold_image();
 };
 
 } //namespace godot

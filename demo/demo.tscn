@@ -1,10 +1,58 @@
-[gd_scene load_steps=2 format=3 uid="uid://trsml2gs8ogq"]
+[gd_scene load_steps=3 format=3 uid="uid://trsml2gs8ogq"]
 
 [ext_resource type="Script" path="res://scripts/Gameplay.gd" id="1_hejob"]
 
-[node name="Demo" type="Node2D" node_paths=PackedStringArray("camera_canvas")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2ls2w"]
+bg_color = Color(0.0196078, 0.741176, 0.803922, 0.34902)
+
+[node name="Demo" type="Node2D" node_paths=PackedStringArray("camera_canvas", "overlay_canvas", "threshold_slider", "mode_button")]
 script = ExtResource("1_hejob")
 camera_canvas = NodePath("CameraCanvas")
+overlay_canvas = NodePath("OverlayCanvas")
+threshold_slider = NodePath("MenuBottom/PanelContainer/HBoxContainer/ThresholdSlider")
+mode_button = NodePath("MenuTop/DropdownMode")
 
 [node name="CameraCanvas" type="Sprite2D" parent="."]
-position = Vector2(575, 326)
+position = Vector2(320, 240)
+
+[node name="OverlayCanvas" type="Sprite2D" parent="."]
+position = Vector2(320, 240)
+
+[node name="MenuTop" type="VBoxContainer" parent="."]
+offset_right = 640.0
+offset_bottom = 480.0
+
+[node name="DropdownMode" type="OptionButton" parent="MenuTop"]
+layout_mode = 2
+item_count = 3
+selected = 0
+popup/item_0/text = "Color"
+popup/item_0/id = 0
+popup/item_1/text = "Grey"
+popup/item_1/id = 1
+popup/item_2/text = "Threshold"
+popup/item_2/id = 2
+
+[node name="MenuBottom" type="VBoxContainer" parent="."]
+offset_top = 240.0
+offset_right = 640.0
+offset_bottom = 480.0
+alignment = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MenuBottom"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2ls2w")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MenuBottom/PanelContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MenuBottom/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Threshold"
+
+[node name="ThresholdSlider" type="HSlider" parent="MenuBottom/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+max_value = 255.0
