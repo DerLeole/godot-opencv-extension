@@ -12,14 +12,14 @@ overlay_button = NodePath("MenuTop/HBoxContainer/PanelContainer/ButtonOverlay")
 rectangle_label = NodePath("MenuTop/HBoxContainer/PanelContainer2/HBoxContainer/LabelRectangle")
 
 [node name="CameraCanvas" type="Sprite2D" parent="."]
-position = Vector2(320, 240)
+position = Vector2(640, 360)
 
 [node name="OverlayCanvas" type="Sprite2D" parent="."]
-position = Vector2(320, 240)
+position = Vector2(640, 360)
 
 [node name="MenuTop" type="VBoxContainer" parent="."]
-offset_right = 640.0
-offset_bottom = 480.0
+offset_right = 1280.0
+offset_bottom = 360.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MenuTop"]
 layout_mode = 2
@@ -57,9 +57,9 @@ text = "Rectangles Found: "
 layout_mode = 2
 
 [node name="MenuBottom" type="VBoxContainer" parent="."]
-offset_top = 240.0
-offset_right = 640.0
-offset_bottom = 480.0
+offset_top = 360.0
+offset_right = 1280.0
+offset_bottom = 720.0
 alignment = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="MenuBottom"]
