@@ -14,13 +14,14 @@ var texture : ImageTexture;
 var overlay_texture : ImageTexture;
 
 func _ready():
-    camera.open(0);
+    camera.open(0, 1920, 1080);
+    # camera.open_file("C:/Users/Leo/Downloads/MarkerCube.mp4");
     camera.flip(false, false);
     texture = ImageTexture.new();
     overlay_texture = ImageTexture.new();
     threshold_slider.value_changed.connect(_on_threshold_changed);
 
-func _process(delta):
+func _process(delta):    
     match mode_button.selected:
         0: # Color
             texture.set_image(camera.get_image());

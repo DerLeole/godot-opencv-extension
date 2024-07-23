@@ -13,6 +13,7 @@ void CVCamera::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("_to_string"), &CVCamera::_to_string);
     ClassDB::bind_method(D_METHOD("open"), &CVCamera::open);
+    ClassDB::bind_method(D_METHOD("open_file"), &CVCamera::open_file);
     ClassDB::bind_method(D_METHOD("close"), &CVCamera::close);
     ClassDB::bind_method(D_METHOD("get_image"), &CVCamera::get_image);
     ClassDB::bind_method(D_METHOD("get_gray_image"), &CVCamera::get_gray_image);
@@ -37,15 +38,26 @@ CVCamera::~CVCamera()
     close();
 }
 
-void CVCamera::open(int device)
+void CVCamera::open(int device, int width = 1920, int height = 1080)
 {
     capture.open(device);
-    capture.set(cv::CAP_PROP_FRAME_WIDTH, 1920);
-    capture.set(cv::CAP_PROP_FRAME_WIDTH, 1080);
+    capture.set(cv::CAP_PROP_FRAME_WIDTH, width);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     if (!capture.isOpened())
     {
         capture.release();
-        printf("Error: Could not open camera\n");
+        UtilityFunctions::push_error("Couldn't open camera.");
+    }
+}
+
+void CVCamera::open_file(String path)
+{
+    const cv::String pathStr(path.utf8());
+    capture.open(pathStr);
+    if (!capture.isOpened())
+    {
+        capture.release();
+        UtilityFunctions::push_error("Couldn't open camera.");
     }
 }
 
@@ -81,6 +93,7 @@ void CVCamera::update_frame()
     cv::cvtColor(frame_raw, frame_rgb, cv::COLOR_BGR2RGB);
     cv::cvtColor(frame_rgb, frame_gray, cv::COLOR_RGB2GRAY);
     frame_overlay = cv::Mat::zeros(frame_raw.size(), CV_8UC4);
+    cv::cvtColor(frame_overlay, frame_overlay, cv::COLOR_BGRA2RGBA);
 }
 
 Ref<Image> CVCamera::mat_to_image(cv::Mat mat)
@@ -572,7 +585,6 @@ int CVCamera::getMarkerId(cv::Mat frame_src, std::array<cv::Point2f, 4> subpix_c
     // Retresh for corner pieces
     cv::threshold(stencil_mat, stencil_mat, 200, 256, cv::THRESH_BINARY);
 
-
     // Discard everything that doesnt have a black border
     for (int i = 0; i < 6; i++)
     {
@@ -605,14 +617,16 @@ int CVCamera::getMarkerId(cv::Mat frame_src, std::array<cv::Point2f, 4> subpix_c
         return -1;
     }
 
-    // Find smallest
+    // Find smallest code and mark it as the right orientation
     int code = codes[0].to_ulong();
-    for (int i = 0; i < 4; i++)
+    int angle = 0;
+    for (int i = 1; i < 4; i++)
     {
         unsigned long current_code = codes[i].to_ulong();
         if (current_code < code)
         {
             code = current_code;
+            angle = i;
         }
     }
 
@@ -624,6 +638,51 @@ int CVCamera::getMarkerId(cv::Mat frame_src, std::array<cv::Point2f, 4> subpix_c
         std::string result = ss.str();
         cv::putText(frame_overlay, result, subpix_corners[0], cv::FONT_HERSHEY_SIMPLEX, 5, CV_RGB(255, 255, 0));
     }
+
+    // Draw "Up" edge Marker
+    if (draw_marker_id)
+    {
+        cv::Point2f upper_edge_midpoint = (subpix_corners[angle] + subpix_corners[(angle + 1) % 4]) * 0.5;
+        cv::Point2f above_point = cv::Point2f(upper_edge_midpoint);
+        above_point.y = cv::max(above_point.y - 20.0f, 0.0f);
+
+        cv::arrowedLine(frame_overlay, upper_edge_midpoint, above_point, CV_RGB(255, 255, 0));
+    }
+
+    // Added in Exercise 5 - Start *****************************************************************
+
+    // Correct the order of the corners, if 0 -> already have the 0 degree position
+    if (angle != 0)
+    {
+        cv::Point2f corrected_corners[4];
+        // Smallest id represents the x-axis, we put the values in the corrected_corners array
+        for (int i = 0; i < 4; i++)
+            corrected_corners[(i + angle) % 4] = subpix_corners[i];
+        // We put the values back in the array in the sorted order
+        for (int i = 0; i < 4; i++)
+            subpix_corners[i] = corrected_corners[i];
+    }
+
+    /*--- NEW FOR PnP begin ---*/
+    int max_d = cv::max(frame_raw.rows, frame_raw.cols);
+    int cx = frame_raw.cols / 2.0;
+    int cy = frame_raw.rows / 2.0;
+    float fx = max_d;
+    float fy = max_d;
+    cv::Point imgCenter(cx, cy);
+
+    cv::Mat _Kmat = (cv::Mat_<double>(3, 3) << fx, 0., cx,
+                     0., fy, cy,
+                     0., 0., 1.);
+
+    cv::Mat distCoeffs = cv::Mat(1, 4, CV_64FC1, {0.0, 0.0, 0.0, 0.0}); // no distortions
+
+    double kMarkerSize = 0.04346;     // 100.0;
+    double pos0 = kMarkerSize / 2.0f; // half the marker size
+    cv::Point3f mcLL(-pos0, -pos0, 0.0);  // lower left
+    cv::Point3f mcLR(pos0, -pos0, 0.0);   // lower right
+    cv::Point3f mcUR(pos0, pos0, 0.0);    // upper right
+    cv::Point3f mcUL(-pos0, pos0, 0.0);   // upper left
 
     return code;
 }

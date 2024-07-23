@@ -51,7 +51,8 @@ public:
 	CVCamera();
 	~CVCamera();
 
-    void open(int device);
+    void open(int device, int width, int height);
+    void open_file(String path);
     void close();
     Ref<Image> get_image();
     Ref<Image> get_gray_image();
